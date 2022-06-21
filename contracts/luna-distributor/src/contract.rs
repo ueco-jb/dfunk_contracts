@@ -1,15 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
-    Response, StdResult, SubMsg, Uint128,
+    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env,
+    MessageInfo, Response, StdResult, SubMsg, Uint128,
 };
 use cw2::set_contract_version;
 
 use std::collections::HashMap;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
 use crate::state::{Config, CONFIG, DEPOSITS};
 
 // version info for migration info
@@ -20,7 +20,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     let mut whitelist: HashMap<Addr, String> = HashMap::new();
@@ -33,6 +33,7 @@ pub fn instantiate(
         weight_per_protocol.insert(entry.protocol.clone(), entry.weight);
     }
     let config = Config {
+        owner: info.sender,
         burn_address: deps.api.addr_validate(&msg.burn_address)?,
         whitelist,
         weight_per_protocol,
@@ -56,6 +57,11 @@ pub fn execute(
         ExecuteMsg::Deposit {} => execute::deposit(deps, info),
         ExecuteMsg::Withdraw { amount, denom } => execute::withdraw(deps, info, amount, denom),
         ExecuteMsg::Distribute { denom } => execute::distribute(deps, info, denom),
+        ExecuteMsg::UpdateConfig {
+            burn_address,
+            whitelist,
+            weight_per_protocol,
+        } => execute::update_config(deps, info, burn_address, whitelist, weight_per_protocol),
     }
 }
 
@@ -146,23 +152,66 @@ mod execute {
 
         Ok(response)
     }
-}
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::GetDeposits { address: _ } => to_binary(&""),
+    pub fn update_config(
+        deps: DepsMut,
+        info: MessageInfo,
+        burn_address: Option<String>,
+        whitelist: Option<Vec<Whitelist>>,
+        weight_per_protocol: Option<Vec<WeightPerProtocol>>,
+    ) -> Result<Response, ContractError> {
+        let mut config = CONFIG.load(deps.storage)?;
+        if config.owner != info.sender {
+            return Err(ContractError::Unauthorized {});
+        }
+
+        if let Some(burn_address) = burn_address {
+            config.burn_address = deps.api.addr_validate(&burn_address)?;
+        }
+
+        if let Some(whitelist) = whitelist {
+            config.whitelist.clear();
+            for entry in whitelist {
+                let address = deps.api.addr_validate(&entry.address)?;
+                config.whitelist.insert(address, entry.protocol.clone());
+            }
+        }
+
+        if let Some(weight_per_protocol) = weight_per_protocol {
+            config.weight_per_protocol.clear();
+            for entry in weight_per_protocol {
+                config
+                    .weight_per_protocol
+                    .insert(entry.protocol.clone(), entry.weight);
+            }
+        }
+
+        CONFIG.save(deps.storage, &config)?;
+
+        Ok(Response::new())
     }
 }
 
-// pub fn query_deposits(
-//     deps: Deps,
-//     address: Addr,
-// ) -> Result<std::vec::Vec<(std::vec::Vec<u8>, Deposit)>, cosmwasm_std::StdError> {
-//     let all: Vec<_> = DEPOSITS
-//         .prefix(&address)
-//         .range(deps.storage, None, None, Order::Ascending)
-//         .collect::<StdResult<_>>()?;
-//
-//     Ok(all)
-// }
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::Deposit { denom, address } => {
+            let address = deps.api.addr_validate(&address)?;
+            to_binary(&query::deposit(deps, address, denom)?)
+        }
+        QueryMsg::Config {} => to_binary(&query::config(deps)?),
+    }
+}
+
+mod query {
+    use super::*;
+
+    pub fn deposit(deps: Deps, address: Addr, denom: String) -> StdResult<Coin> {
+        let deposited = DEPOSITS.load(deps.storage, (&address, &denom))?;
+        Ok(coin(deposited.u128(), denom))
+    }
+
+    pub fn config(deps: Deps) -> StdResult<Config> {
+        CONFIG.load(deps.storage)
+    }
+}

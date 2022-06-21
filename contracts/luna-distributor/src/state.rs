@@ -7,6 +7,7 @@ use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
+    pub owner: Addr,
     pub burn_address: Addr,
     pub whitelist: HashMap<Addr, String>,
     pub weight_per_protocol: HashMap<String, Decimal>,

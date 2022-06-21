@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Decimal, Uint128};
+use cosmwasm_std::{Decimal, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -20,13 +20,18 @@ pub enum ExecuteMsg {
     Distribute {
         denom: String,
     },
+    UpdateConfig {
+        burn_address: Option<String>,
+        whitelist: Option<Vec<Whitelist>>,
+        weight_per_protocol: Option<Vec<WeightPerProtocol>>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    // GetDeposits returns the current deposits for address
-    GetDeposits { address: Addr },
+    Deposit { address: String, denom: String },
+    Config {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
