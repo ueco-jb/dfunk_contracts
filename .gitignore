@@ -1,0 +1,5 @@
+target
+artifacts
+.idea
+contracts/*/schema
+.DS_Store
