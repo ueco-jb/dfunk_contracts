@@ -11,6 +11,13 @@ pub enum ContractError {
 
     #[error("Zero balance")]
     NoBalance {},
-    // Add any other custom errors you like here.
-    // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
+
+    #[error("Trying to deposit more then one denom at once")]
+    DepositMoreThenOne {},
+
+    #[error("Trying to deposit unsupported denom {0}")]
+    UnsupportedDenom(String),
+
+    #[error("Provided protocol {0} is not on whitelist")]
+    DistributionNoSuchProtocol(String),
 }
