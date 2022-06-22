@@ -1,6 +1,5 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_storage_plus::{Item, Map};
@@ -9,10 +8,22 @@ use cw_storage_plus::{Item, Map};
 pub struct Config {
     pub owner: Addr,
     pub burn_address: Addr,
-    pub whitelist: HashMap<Addr, String>,
-    pub weight_per_protocol: HashMap<String, Decimal>,
+    pub whitelist: Vec<Whitelist>,
+    pub weight_per_protocol: Vec<WeightPerProtocol>,
     pub percent_to_burn: Decimal,
     pub percent_to_distribute: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Whitelist {
+    pub address: Addr,
+    pub protocol: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct WeightPerProtocol {
+    pub protocol: String,
+    pub weight: Decimal,
 }
 
 pub const DEPOSITS: Map<(&Addr, &str), Uint128> = Map::new("deposit");

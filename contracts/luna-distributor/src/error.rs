@@ -20,4 +20,7 @@ pub enum ContractError {
 
     #[error("Provided protocol {0} is not on whitelist")]
     DistributionNoSuchProtocol(String),
+
+    #[error("No such protocol on weights list: {0}")]
+    NoSuchProtocol(String),
 }

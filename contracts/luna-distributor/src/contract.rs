@@ -6,8 +6,6 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 
-use std::collections::HashMap;
-
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
 use crate::state::{Config, CONFIG, DEPOSITS};
@@ -23,18 +21,26 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let mut whitelist: HashMap<Addr, String> = HashMap::new();
+    let mut whitelist: Vec<crate::state::Whitelist> = Vec::new();
     for entry in msg.whitelist {
         let address = deps.api.addr_validate(&entry.address)?;
-        whitelist.insert(address, entry.protocol.clone());
+        whitelist.push(crate::state::Whitelist {
+            address,
+            protocol: entry.protocol.clone(),
+        });
     }
-    let mut weight_per_protocol: HashMap<String, Decimal> = HashMap::new();
+    let mut weight_per_protocol: Vec<crate::state::WeightPerProtocol> = Vec::new();
     for entry in msg.weight_per_protocol {
-        weight_per_protocol.insert(entry.protocol.clone(), entry.weight);
+        weight_per_protocol.push(crate::state::WeightPerProtocol {
+            protocol: entry.protocol.clone(),
+            weight: entry.weight,
+        });
     }
+
+    let burn_address = deps.api.addr_validate(&msg.burn_address)?;
     let config = Config {
         owner: info.sender,
-        burn_address: deps.api.addr_validate(&msg.burn_address)?,
+        burn_address,
         whitelist,
         weight_per_protocol,
         percent_to_burn: Decimal::from_ratio(7778u128, 10000u128), // 77.78%
@@ -139,17 +145,32 @@ mod execute {
             amount: vec![coin(amount_to_burn.u128(), denom.clone())],
         }));
 
-        for (address, protocol) in config.whitelist.iter() {
-            if let Some(protocol_weight) = config.weight_per_protocol.get(protocol) {
-                let amount = amount_to_distribute * *protocol_weight;
+        for wl_item in config.whitelist.iter() {
+            let weight_per_protocol = config
+                .weight_per_protocol
+                .iter()
+                .find(|wpp| wpp.protocol == wl_item.protocol);
+            if let Some(wpp) = weight_per_protocol {
+                let amount = amount_to_distribute * wpp.weight;
                 let msg = SubMsg::new(BankMsg::Send {
-                    to_address: address.to_string(),
+                    to_address: wl_item.address.to_string(),
                     amount: vec![coin(amount.u128(), denom.clone())],
                 });
                 response = response.add_submessage(msg);
+            } else {
+                return Err(ContractError::NoSuchProtocol(wl_item.protocol.clone()));
             }
         }
-
+        // for wl_item in config.whitelist.iter() {
+        //     if let Some(protocol_weight) = config.weight_per_protocol.get(wl_item.protocol) {
+        //         let amount = amount_to_distribute * *protocol_weight;
+        //         let msg = SubMsg::new(BankMsg::Send {
+        //             to_address: wl_item.address.to_string(),
+        //             amount: vec![coin(amount.u128(), denom.clone())],
+        //         });
+        //         response = response.add_submessage(msg);
+        //     }
+        // }
         Ok(response)
     }
 
@@ -173,7 +194,10 @@ mod execute {
             config.whitelist.clear();
             for entry in whitelist {
                 let address = deps.api.addr_validate(&entry.address)?;
-                config.whitelist.insert(address, entry.protocol.clone());
+                config.whitelist.push(crate::state::Whitelist {
+                    address,
+                    protocol: entry.protocol.clone(),
+                });
             }
         }
 
@@ -182,7 +206,10 @@ mod execute {
             for entry in weight_per_protocol {
                 config
                     .weight_per_protocol
-                    .insert(entry.protocol.clone(), entry.weight);
+                    .push(crate::state::WeightPerProtocol {
+                        protocol: entry.protocol.clone(),
+                        weight: entry.weight,
+                    });
             }
         }
 
