@@ -99,6 +99,7 @@ mod execute {
 
         Ok(Response::new().add_attribute("method", "deposit"))
     }
+
     pub fn withdraw(
         deps: DepsMut,
         info: MessageInfo,
@@ -145,11 +146,14 @@ mod execute {
             amount: vec![coin(amount_to_burn.u128(), denom.clone())],
         }));
 
+        // Iter through whitelist
         for wl_item in config.whitelist.iter() {
             let weight_per_protocol = config
                 .weight_per_protocol
                 .iter()
+                // find appropriate protocol
                 .find(|wpp| wpp.protocol == wl_item.protocol);
+            // if contract has been found, add extra bank message
             if let Some(wpp) = weight_per_protocol {
                 let amount = amount_to_distribute * wpp.weight;
                 let msg = SubMsg::new(BankMsg::Send {
