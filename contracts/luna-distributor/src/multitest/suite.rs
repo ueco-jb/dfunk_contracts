@@ -1,14 +1,9 @@
-use anyhow::{anyhow, Result as AnyResult};
+use anyhow::Result as AnyResult;
 use schemars::JsonSchema;
 use std::fmt;
 
-use cosmwasm_std::{
-    testing::{mock_env, MockApi, MockStorage},
-    Addr, Coin, Decimal, Empty, Uint128,
-};
-use terra_multi_test::{
-    App, AppBuilder, AppResponse, BankKeeper, Contract, ContractWrapper, Executor,
-};
+use cosmwasm_std::{Addr, Coin, Decimal, Uint128};
+use terra_multi_test::{App, AppBuilder, AppResponse, Contract, ContractWrapper, Executor};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
 use crate::state::Config;
@@ -24,16 +19,6 @@ where
     );
     Box::new(contract)
 }
-
-// fn contract_distributor() -> Box<dyn Contract<Empty>> {
-//     let contract = ContractWrapper::new(
-//         crate::contract::execute,
-//         crate::contract::instantiate,
-//         crate::contract::query,
-//     );
-//
-//     Box::new(contract)
-// }
 
 /// Builder for test suite
 #[derive(Debug)]
@@ -139,12 +124,82 @@ impl Suite {
         self.owner.clone()
     }
 
+    pub fn deposit(&mut self, sender: &str, funds: &[Coin]) -> AnyResult<AppResponse> {
+        self.app.execute_contract(
+            Addr::unchecked(sender),
+            self.contract.clone(),
+            &ExecuteMsg::Deposit {},
+            funds,
+        )
+    }
+
+    pub fn withdraw(
+        &mut self,
+        sender: &str,
+        denom: &str,
+        amount: impl Into<Option<Uint128>>,
+    ) -> AnyResult<AppResponse> {
+        self.app.execute_contract(
+            Addr::unchecked(sender),
+            self.contract.clone(),
+            &ExecuteMsg::Withdraw {
+                amount: amount.into(),
+                denom: denom.into(),
+            },
+            &[],
+        )
+    }
+
+    pub fn distribute(&mut self, sender: &str, denom: &str) -> AnyResult<AppResponse> {
+        self.app.execute_contract(
+            Addr::unchecked(sender),
+            self.contract.clone(),
+            &ExecuteMsg::Distribute {
+                denom: denom.into(),
+            },
+            &[],
+        )
+    }
+
+    pub fn update_config(
+        &mut self,
+        sender: &str,
+        burn_address: impl Into<Option<String>>,
+        whitelist: impl Into<Option<Vec<Whitelist>>>,
+        weight_per_protocol: impl Into<Option<Vec<WeightPerProtocol>>>,
+    ) -> AnyResult<AppResponse> {
+        self.app.execute_contract(
+            Addr::unchecked(sender),
+            self.contract.clone(),
+            &ExecuteMsg::UpdateConfig {
+                burn_address: burn_address.into(),
+                whitelist: whitelist.into(),
+                weight_per_protocol: weight_per_protocol.into(),
+            },
+            &[],
+        )
+    }
+
+    pub fn query_deposit(
+        &self,
+        address: impl Into<String>,
+        denom: impl Into<String>,
+    ) -> AnyResult<Coin> {
+        let response: Coin = self.app.wrap().query_wasm_smart(
+            self.contract.clone(),
+            &QueryMsg::Deposit {
+                address: address.into(),
+                denom: denom.into(),
+            },
+        )?;
+        Ok(response)
+    }
+
     pub fn query_config(&self) -> AnyResult<Config> {
-        let contract = self.contract.clone();
         let response: Config = self
             .app
             .wrap()
-            .query_wasm_smart(contract, &QueryMsg::Config {})?;
+            .query_wasm_smart(self.contract.clone(), &QueryMsg::Config {})?;
         Ok(response)
     }
 }

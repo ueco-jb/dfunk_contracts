@@ -161,16 +161,7 @@ mod execute {
                 return Err(ContractError::NoSuchProtocol(wl_item.protocol.clone()));
             }
         }
-        // for wl_item in config.whitelist.iter() {
-        //     if let Some(protocol_weight) = config.weight_per_protocol.get(wl_item.protocol) {
-        //         let amount = amount_to_distribute * *protocol_weight;
-        //         let msg = SubMsg::new(BankMsg::Send {
-        //             to_address: wl_item.address.to_string(),
-        //             amount: vec![coin(amount.u128(), denom.clone())],
-        //         });
-        //         response = response.add_submessage(msg);
-        //     }
-        // }
+
         Ok(response)
     }
 
