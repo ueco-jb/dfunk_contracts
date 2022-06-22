@@ -3,8 +3,7 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
-use luna_distributor::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use luna_distributor::state::Config;
+use luna_distributor::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
 
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -15,5 +14,6 @@ fn main() {
     export_schema(&schema_for!(InstantiateMsg), &out_dir);
     export_schema(&schema_for!(ExecuteMsg), &out_dir);
     export_schema(&schema_for!(QueryMsg), &out_dir);
-    export_schema(&schema_for!(Config), &out_dir);
+    export_schema(&schema_for!(Whitelist), &out_dir);
+    export_schema(&schema_for!(WeightPerProtocol), &out_dir);
 }
