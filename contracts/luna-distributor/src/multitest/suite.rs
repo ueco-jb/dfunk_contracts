@@ -75,7 +75,9 @@ impl SuiteBuilder {
     pub fn build(self) -> Suite {
         let mut app: App = AppBuilder::new().build();
 
-        let owner = Addr::unchecked("cosmos1dl34yx429w7q5e68tlc9w3ahgycqc7edff0edu");
+        let owner = Addr::unchecked("owner");
+
+        let burn_address = self.burn_address;
 
         let distributor_id = app.store_code(contract_distributor());
         let distributor_contract = app
@@ -83,7 +85,7 @@ impl SuiteBuilder {
                 distributor_id,
                 owner.clone(),
                 &InstantiateMsg {
-                    burn_address: self.burn_address,
+                    burn_address: burn_address.clone(),
                     whitelist: self.whitelist,
                     weight_per_protocol: self.weight_per_protocol,
                 },
@@ -102,6 +104,7 @@ impl SuiteBuilder {
             app,
             owner,
             contract: distributor_contract,
+            burn_address,
         }
     }
 }
@@ -113,15 +116,21 @@ pub struct Suite {
     owner: Addr,
     /// Address of Market contract
     contract: Addr,
+    /// Address of burn contract
+    burn_address: String,
 }
 
 impl Suite {
-    pub fn app(&mut self) -> &mut App {
-        &mut self.app
-    }
-
     pub fn owner(&mut self) -> Addr {
         self.owner.clone()
+    }
+
+    pub fn contract(&mut self) -> String {
+        self.contract.to_string()
+    }
+
+    pub fn burn_address(&mut self) -> String {
+        self.burn_address.clone()
     }
 
     pub fn deposit(&mut self, sender: &str, funds: &[Coin]) -> AnyResult<AppResponse> {
@@ -201,5 +210,14 @@ impl Suite {
             .wrap()
             .query_wasm_smart(self.contract.clone(), &QueryMsg::Config {})?;
         Ok(response)
+    }
+
+    pub fn query_user_balance(
+        &self,
+        address: impl Into<String>,
+        denom: impl Into<String>,
+    ) -> AnyResult<Uint128> {
+        let response: Coin = self.app.wrap().query_balance(address, denom)?;
+        Ok(response.amount)
     }
 }

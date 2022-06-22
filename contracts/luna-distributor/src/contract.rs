@@ -158,7 +158,7 @@ mod execute {
                 });
                 response = response.add_submessage(msg);
             } else {
-                return Err(ContractError::NoSuchProtocol(wl_item.protocol.clone()));
+                return Err(ContractError::MissingProtocol(wl_item.protocol.clone()));
             }
         }
 

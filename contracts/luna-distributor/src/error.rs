@@ -1,7 +1,7 @@
 use cosmwasm_std::StdError;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
@@ -21,6 +21,6 @@ pub enum ContractError {
     #[error("Provided protocol {0} is not on whitelist")]
     DistributionNoSuchProtocol(String),
 
-    #[error("No such protocol on weights list: {0}")]
-    NoSuchProtocol(String),
+    #[error("Missing protocol on weights list: {0}")]
+    MissingProtocol(String),
 }
