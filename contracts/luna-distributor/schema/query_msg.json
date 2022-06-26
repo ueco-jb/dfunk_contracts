@@ -1,14 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "QueryMsg",
-  "anyOf": [
+  "oneOf": [
     {
       "type": "object",
       "required": [
-        "get_count"
+        "deposit"
       ],
       "properties": {
-        "get_count": {
+        "deposit": {
+          "type": "object",
+          "required": [
+            "address",
+            "denom"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "denom": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
           "type": "object"
         }
       },

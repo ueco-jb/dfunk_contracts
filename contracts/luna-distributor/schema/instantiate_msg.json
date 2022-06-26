@@ -3,12 +3,61 @@
   "title": "InstantiateMsg",
   "type": "object",
   "required": [
-    "count"
+    "burn_address",
+    "weight_per_protocol",
+    "whitelist"
   ],
   "properties": {
-    "count": {
-      "type": "integer",
-      "format": "int32"
+    "burn_address": {
+      "type": "string"
+    },
+    "weight_per_protocol": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/WeightPerProtocol"
+      }
+    },
+    "whitelist": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Whitelist"
+      }
+    }
+  },
+  "definitions": {
+    "Decimal": {
+      "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
+      "type": "string"
+    },
+    "WeightPerProtocol": {
+      "type": "object",
+      "required": [
+        "protocol",
+        "weight"
+      ],
+      "properties": {
+        "protocol": {
+          "type": "string"
+        },
+        "weight": {
+          "$ref": "#/definitions/Decimal"
+        }
+      }
+    },
+    "Whitelist": {
+      "type": "object",
+      "required": [
+        "address",
+        "protocol"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        }
+      }
     }
   }
 }
