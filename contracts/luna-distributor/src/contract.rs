@@ -7,7 +7,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, WeightPerProtocol, Whitelist};
 use crate::state::{Config, CONFIG, DEPOSITS};
 
 // version info for migration info
@@ -236,4 +236,9 @@ mod query {
     pub fn config(deps: Deps) -> StdResult<Config> {
         CONFIG.load(deps.storage)
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
+    Ok(Response::default())
 }
