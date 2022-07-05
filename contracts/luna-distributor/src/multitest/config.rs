@@ -48,7 +48,7 @@ fn query() {
     assert_eq!(
         res,
         Config {
-            owner: suite.owner(),
+            admin: suite.owner(),
             burn_address: Addr::unchecked(suite.burn_address()),
             whitelist,
             weight_per_protocol,
@@ -136,7 +136,7 @@ fn update() {
     assert_eq!(
         res,
         Config {
-            owner: suite.owner(),
+            admin: suite.owner(),
             burn_address: Addr::unchecked(suite.burn_address()),
             whitelist,
             weight_per_protocol,

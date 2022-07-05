@@ -18,7 +18,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     let mut whitelist: Vec<crate::state::Whitelist> = Vec::new();
@@ -39,7 +39,7 @@ pub fn instantiate(
 
     let burn_address = deps.api.addr_validate(&msg.burn_address)?;
     let config = Config {
-        owner: info.sender,
+        admin: deps.api.addr_validate(&msg.admin)?,
         burn_address,
         whitelist,
         weight_per_protocol,
@@ -177,7 +177,7 @@ mod execute {
         weight_per_protocol: Option<Vec<WeightPerProtocol>>,
     ) -> Result<Response, ContractError> {
         let mut config = CONFIG.load(deps.storage)?;
-        if config.owner != info.sender {
+        if config.admin != info.sender {
             return Err(ContractError::Unauthorized {});
         }
 
