@@ -1,4 +1,3 @@
-## About the smart contract
 This is a smart contract for distribution of funds from the community pool as per [Prop 4080 on Terra Classic](https://classic-agora.terra.money/t/proposal-distribute-50-transaction-fees-to-the-community-pool-increase-proposer-validator-rewards/44729)
 
 ## Distribution Logic
