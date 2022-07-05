@@ -7,6 +7,7 @@ pub struct MigrateMsg {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
+    pub admin: String,
     pub burn_address: String,
     pub whitelist: Vec<Whitelist>,
     pub weight_per_protocol: Vec<WeightPerProtocol>,

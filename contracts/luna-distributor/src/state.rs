@@ -6,7 +6,7 @@ use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
-    pub owner: Addr,
+    pub admin: Addr,
     pub burn_address: Addr,
     pub whitelist: Vec<Whitelist>,
     pub weight_per_protocol: Vec<WeightPerProtocol>,

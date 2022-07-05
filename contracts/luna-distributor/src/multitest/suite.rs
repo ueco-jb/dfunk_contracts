@@ -85,6 +85,7 @@ impl SuiteBuilder {
                 distributor_id,
                 owner.clone(),
                 &InstantiateMsg {
+                    admin: owner.to_string(),
                     burn_address: burn_address.clone(),
                     whitelist: self.whitelist,
                     weight_per_protocol: self.weight_per_protocol,

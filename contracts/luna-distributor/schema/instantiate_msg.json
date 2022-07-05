@@ -3,11 +3,15 @@
   "title": "InstantiateMsg",
   "type": "object",
   "required": [
+    "admin",
     "burn_address",
     "weight_per_protocol",
     "whitelist"
   ],
   "properties": {
+    "admin": {
+      "type": "string"
+    },
     "burn_address": {
       "type": "string"
     },
