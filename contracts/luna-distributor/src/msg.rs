@@ -1,4 +1,4 @@
-use cosmwasm_std::{Decimal, Uint128};
+use cosmwasm_std::Decimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -16,15 +16,11 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Deposit {},
-    Withdraw {
-        amount: Option<Uint128>,
-        denom: String,
-    },
     Distribute {
         denom: String,
     },
     UpdateConfig {
+        admin: Option<String>,
         burn_address: Option<String>,
         whitelist: Option<Vec<Whitelist>>,
         weight_per_protocol: Option<Vec<WeightPerProtocol>>,
@@ -34,7 +30,6 @@ pub enum ExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    Deposit { address: String, denom: String },
     Config {},
 }
 

@@ -1,14 +1,14 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env,
-    MessageInfo, Response, StdResult, SubMsg, Uint128,
+    coin, to_binary, BankMsg, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response,
+    StdResult, SubMsg, Uint128,
 };
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, WeightPerProtocol, Whitelist};
-use crate::state::{Config, CONFIG, DEPOSITS};
+use crate::state::{Config, CONFIG};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:luna-distributor";
@@ -39,7 +39,7 @@ pub fn instantiate(
 
     let burn_address = deps.api.addr_validate(&msg.burn_address)?;
     let config = Config {
-        admin: deps.api.addr_validate(&msg.admin)?,
+        admin: msg.admin,
         burn_address,
         whitelist,
         weight_per_protocol,
@@ -55,91 +55,49 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Deposit {} => execute::deposit(deps, info),
-        ExecuteMsg::Withdraw { amount, denom } => execute::withdraw(deps, info, amount, denom),
-        ExecuteMsg::Distribute { denom } => execute::distribute(deps, info, denom),
+        ExecuteMsg::Distribute { denom } => execute::distribute(deps, env, denom),
         ExecuteMsg::UpdateConfig {
+            admin,
             burn_address,
             whitelist,
             weight_per_protocol,
-        } => execute::update_config(deps, info, burn_address, whitelist, weight_per_protocol),
+        } => execute::update_config(
+            deps,
+            info,
+            admin,
+            burn_address,
+            whitelist,
+            weight_per_protocol,
+        ),
     }
 }
 
 mod execute {
     use super::*;
 
-    pub fn deposit(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
-        let deposit_addr = info.sender;
+    use cosmwasm_std::{BalanceResponse, BankQuery, QueryRequest};
 
-        let funds = if info.funds.len() != 1 {
-            return Err(ContractError::DepositMoreThenOne {});
-        } else {
-            info.funds[0].clone()
-        };
+    pub fn distribute(deps: DepsMut, env: Env, denom: String) -> Result<Response, ContractError> {
+        let contract_address = env.contract.address;
+        let balance: BalanceResponse =
+            deps.querier.query(&QueryRequest::Bank(BankQuery::Balance {
+                address: contract_address.to_string(),
+                denom: denom.clone(),
+            }))?;
+        let balance = balance.amount.amount;
 
-        let tokens = if funds.denom == "uusd" || funds.denom == "uluna" {
-            (info.funds[0].amount, info.funds[0].denom.clone())
-        } else {
-            return Err(ContractError::UnsupportedDenom(funds.denom));
-        };
-
-        DEPOSITS.update(
-            deps.storage,
-            (&deposit_addr, &tokens.1),
-            |deposit: Option<Uint128>| -> StdResult<_> {
-                Ok(deposit.unwrap_or_default() + tokens.0)
-            },
-        )?;
-
-        Ok(Response::new().add_attribute("method", "deposit"))
-    }
-
-    pub fn withdraw(
-        deps: DepsMut,
-        info: MessageInfo,
-        amount: Option<Uint128>,
-        denom: String,
-    ) -> Result<Response, ContractError> {
-        let deposited = DEPOSITS.load(deps.storage, (&info.sender, &denom))?;
-        if deposited == Uint128::zero() {
-            return Err(ContractError::NoBalance {});
-        }
-
-        let amount = amount.unwrap_or(deposited);
-
-        DEPOSITS.update(
-            deps.storage,
-            (&info.sender, &denom),
-            |deposited: Option<Uint128>| -> StdResult<_> {
-                Ok(deposited.unwrap_or_default() - amount)
-            },
-        )?;
-
-        Ok(Response::new().add_message(CosmosMsg::Bank(BankMsg::Send {
-            to_address: info.sender.to_string(),
-            amount: vec![coin(u128::from(amount), denom)],
-        })))
-    }
-
-    pub fn distribute(
-        deps: DepsMut,
-        info: MessageInfo,
-        denom: String,
-    ) -> Result<Response, ContractError> {
-        let deposited = DEPOSITS.load(deps.storage, (&info.sender, &denom))?;
-        if deposited == Uint128::zero() {
+        if balance == Uint128::zero() {
             return Err(ContractError::NoBalance {});
         }
 
         let config = CONFIG.load(deps.storage)?;
-        let amount_to_distribute = deposited * config.percent_to_distribute;
-        let amount_to_burn = deposited * config.percent_to_burn;
+        let amount_to_distribute = balance * config.percent_to_distribute;
+        let amount_to_burn = balance * config.percent_to_burn;
 
         let mut response = Response::new().add_submessage(SubMsg::new(BankMsg::Send {
             to_address: config.burn_address.to_string(),
@@ -172,13 +130,22 @@ mod execute {
     pub fn update_config(
         deps: DepsMut,
         info: MessageInfo,
+        admin: Option<String>,
         burn_address: Option<String>,
         whitelist: Option<Vec<Whitelist>>,
         weight_per_protocol: Option<Vec<WeightPerProtocol>>,
     ) -> Result<Response, ContractError> {
         let mut config = CONFIG.load(deps.storage)?;
-        if config.admin != info.sender {
+        if config.admin.is_empty() {
+            return Err(ContractError::ConfigNotUpdatable {});
+        }
+        let cfg_admin = deps.api.addr_validate(&config.admin)?;
+        if cfg_admin != info.sender {
             return Err(ContractError::Unauthorized {});
+        }
+
+        if let Some(admin) = admin {
+            config.admin = admin
         }
 
         if let Some(burn_address) = burn_address {
@@ -217,21 +184,12 @@ mod execute {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Deposit { denom, address } => {
-            let address = deps.api.addr_validate(&address)?;
-            to_binary(&query::deposit(deps, address, denom)?)
-        }
         QueryMsg::Config {} => to_binary(&query::config(deps)?),
     }
 }
 
 mod query {
     use super::*;
-
-    pub fn deposit(deps: Deps, address: Addr, denom: String) -> StdResult<Coin> {
-        let deposited = DEPOSITS.load(deps.storage, (&address, &denom))?;
-        Ok(coin(deposited.u128(), denom))
-    }
 
     pub fn config(deps: Deps) -> StdResult<Config> {
         CONFIG.load(deps.storage)

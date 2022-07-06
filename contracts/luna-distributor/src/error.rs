@@ -23,4 +23,7 @@ pub enum ContractError {
 
     #[error("Missing protocol on weights list: {0}")]
     MissingProtocol(String),
+
+    #[error("Config cannot be updated - admin field is empty")]
+    ConfigNotUpdatable {},
 }

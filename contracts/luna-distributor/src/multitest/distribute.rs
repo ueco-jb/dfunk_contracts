@@ -17,10 +17,6 @@ fn distribute_works() {
         .build();
 
     suite.deposit(user, &[coin(100_000_000, "uluna")]).unwrap();
-    assert_eq!(
-        suite.query_deposit(user, "uluna").unwrap(),
-        coin(100_000_000, "uluna")
-    );
 
     let response = suite.distribute(user, "uluna").unwrap().events;
     assert_eq!(
@@ -107,10 +103,6 @@ fn missing_protocol_weight() {
         .build();
 
     suite.deposit(user, &[coin(100_000_000, "uluna")]).unwrap();
-    assert_eq!(
-        suite.query_deposit(user, "uluna").unwrap(),
-        coin(100_000_000, "uluna")
-    );
 
     let err = suite.distribute(user, "uluna").unwrap_err();
     assert_eq!(
