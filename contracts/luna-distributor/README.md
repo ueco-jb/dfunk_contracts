@@ -51,8 +51,8 @@ Config can be updated only by the admin.
 
 ## Query
 
-### Get Deposits
+### Get Config
 
 ```
-{"get_deposits":{"address":"depositor_address"}}
+{"config":{}}
 ```
