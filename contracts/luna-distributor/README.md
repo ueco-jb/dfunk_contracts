@@ -47,7 +47,7 @@ To distribute USTC:
 ```
 ### UpdateConfig
 
-Config can be updated only by the admin. The administration of the contract is transferable to another account, a multisig wallet, or a governance contract. Setting the `admin` field as empty will make the contract non-updatable.
+Config can be updated only by the admin set via `InstantiateMsg`. The administration of the contract is transferable to another account, a multisig wallet, or a governance contract. Setting the `admin` field as empty will make the contract non-updatable.
 
 ```
 {
