@@ -2,7 +2,7 @@ use anyhow::Result as AnyResult;
 use schemars::JsonSchema;
 use std::fmt;
 
-use cosmwasm_std::{Addr, Coin, Decimal, Uint128};
+use cosmwasm_std::{Addr, Coin, Decimal};
 use terra_multi_test::{App, AppBuilder, AppResponse, Contract, ContractWrapper, Executor};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
@@ -23,6 +23,7 @@ where
 /// Builder for test suite
 #[derive(Debug)]
 pub struct SuiteBuilder {
+    pub admin: String,
     pub burn_address: String,
     pub whitelist: Vec<Whitelist>,
     pub weight_per_protocol: Vec<WeightPerProtocol>,
@@ -32,11 +33,17 @@ pub struct SuiteBuilder {
 impl SuiteBuilder {
     pub fn new() -> Self {
         Self {
+            admin: "owner".to_owned(),
             burn_address: "burnaddress".to_owned(),
             whitelist: vec![],
             weight_per_protocol: vec![],
             funds: vec![],
         }
+    }
+
+    pub fn with_admin(mut self, admin: String) -> Self {
+        self.admin = admin;
+        self
     }
 
     pub fn with_whitelist(mut self, whitelist: &[(&str, &str)]) -> Self {
@@ -77,6 +84,7 @@ impl SuiteBuilder {
 
         let owner = Addr::unchecked("owner");
 
+        let admin = self.admin;
         let burn_address = self.burn_address;
 
         let distributor_id = app.store_code(contract_distributor());
@@ -85,7 +93,7 @@ impl SuiteBuilder {
                 distributor_id,
                 owner.clone(),
                 &InstantiateMsg {
-                    admin: owner.to_string(),
+                    admin,
                     burn_address: burn_address.clone(),
                     whitelist: self.whitelist,
                     weight_per_protocol: self.weight_per_protocol,
@@ -135,29 +143,8 @@ impl Suite {
     }
 
     pub fn deposit(&mut self, sender: &str, funds: &[Coin]) -> AnyResult<AppResponse> {
-        self.app.execute_contract(
-            Addr::unchecked(sender),
-            self.contract.clone(),
-            &ExecuteMsg::Deposit {},
-            funds,
-        )
-    }
-
-    pub fn withdraw(
-        &mut self,
-        sender: &str,
-        denom: &str,
-        amount: impl Into<Option<Uint128>>,
-    ) -> AnyResult<AppResponse> {
-        self.app.execute_contract(
-            Addr::unchecked(sender),
-            self.contract.clone(),
-            &ExecuteMsg::Withdraw {
-                amount: amount.into(),
-                denom: denom.into(),
-            },
-            &[],
-        )
+        self.app
+            .send_tokens(Addr::unchecked(sender), self.contract.clone(), funds)
     }
 
     pub fn distribute(&mut self, sender: &str, denom: &str) -> AnyResult<AppResponse> {
@@ -174,6 +161,7 @@ impl Suite {
     pub fn update_config(
         &mut self,
         sender: &str,
+        admin: impl Into<Option<String>>,
         burn_address: impl Into<Option<String>>,
         whitelist: impl Into<Option<Vec<Whitelist>>>,
         weight_per_protocol: impl Into<Option<Vec<WeightPerProtocol>>>,
@@ -182,6 +170,7 @@ impl Suite {
             Addr::unchecked(sender),
             self.contract.clone(),
             &ExecuteMsg::UpdateConfig {
+                admin: admin.into(),
                 burn_address: burn_address.into(),
                 whitelist: whitelist.into(),
                 weight_per_protocol: weight_per_protocol.into(),
@@ -190,35 +179,11 @@ impl Suite {
         )
     }
 
-    pub fn query_deposit(
-        &self,
-        address: impl Into<String>,
-        denom: impl Into<String>,
-    ) -> AnyResult<Coin> {
-        let response: Coin = self.app.wrap().query_wasm_smart(
-            self.contract.clone(),
-            &QueryMsg::Deposit {
-                address: address.into(),
-                denom: denom.into(),
-            },
-        )?;
-        Ok(response)
-    }
-
     pub fn query_config(&self) -> AnyResult<Config> {
         let response: Config = self
             .app
             .wrap()
             .query_wasm_smart(self.contract.clone(), &QueryMsg::Config {})?;
         Ok(response)
-    }
-
-    pub fn query_user_balance(
-        &self,
-        address: impl Into<String>,
-        denom: impl Into<String>,
-    ) -> AnyResult<Uint128> {
-        let response: Coin = self.app.wrap().query_balance(address, denom)?;
-        Ok(response.amount)
     }
 }

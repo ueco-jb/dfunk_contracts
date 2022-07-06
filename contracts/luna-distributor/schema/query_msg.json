@@ -5,30 +5,6 @@
     {
       "type": "object",
       "required": [
-        "deposit"
-      ],
-      "properties": {
-        "deposit": {
-          "type": "object",
-          "required": [
-            "address",
-            "denom"
-          ],
-          "properties": {
-            "address": {
-              "type": "string"
-            },
-            "denom": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": [
         "config"
       ],
       "properties": {

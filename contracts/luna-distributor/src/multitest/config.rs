@@ -48,7 +48,7 @@ fn query() {
     assert_eq!(
         res,
         Config {
-            admin: suite.owner(),
+            admin: suite.owner().to_string(),
             burn_address: Addr::unchecked(suite.burn_address()),
             whitelist,
             weight_per_protocol,
@@ -100,7 +100,13 @@ fn update() {
 
     let owner = suite.owner();
     suite
-        .update_config(owner.as_str(), None, new_whitelist, new_weight_per_protocol)
+        .update_config(
+            owner.as_str(),
+            None,
+            None,
+            new_whitelist,
+            new_weight_per_protocol,
+        )
         .unwrap();
 
     let whitelist = vec![
@@ -136,7 +142,7 @@ fn update() {
     assert_eq!(
         res,
         Config {
-            admin: suite.owner(),
+            admin: suite.owner().to_string(),
             burn_address: Addr::unchecked(suite.burn_address()),
             whitelist,
             weight_per_protocol,
@@ -158,7 +164,60 @@ fn update_unauthorized() {
         .build();
 
     let err = suite
-        .update_config("someone_else", None, None, None)
+        .update_config("someone_else", None, None, None, None)
         .unwrap_err();
     assert_eq!(ContractError::Unauthorized {}, err.downcast().unwrap());
+}
+
+#[test]
+fn update_with_empty_admin() {
+    let mut suite = SuiteBuilder::new()
+        .with_admin("".to_owned())
+        .with_whitelist(&[
+            ("contract1", "terraswap"),
+            ("contract2", "curve"),
+            ("contract3", "multichain"),
+        ])
+        .with_weights_per_protocol(&[("terraswap", 50), ("curve", 30), ("multichain", 20)])
+        .build();
+
+    let owner = suite.owner();
+    let err = suite
+        .update_config(owner.as_str(), None, None, None, None)
+        .unwrap_err();
+    assert_eq!(
+        ContractError::ConfigNotUpdatable {},
+        err.downcast().unwrap()
+    );
+}
+
+#[test]
+fn update_to_empty_admin() {
+    let mut suite = SuiteBuilder::new()
+        .with_whitelist(&[
+            ("contract1", "terraswap"),
+            ("contract2", "curve"),
+            ("contract3", "multichain"),
+        ])
+        .with_weights_per_protocol(&[("terraswap", 50), ("curve", 30), ("multichain", 20)])
+        .build();
+
+    let owner = suite.owner();
+    // first update to empty admin ""
+    suite
+        .update_config(owner.as_str(), Some("".to_owned()), None, None, None)
+        .unwrap();
+
+    assert!(matches!(suite.query_config().unwrap(),
+            Config {
+                admin, ..
+            } if admin.is_empty()));
+
+    let err = suite
+        .update_config(owner.as_str(), None, None, None, None)
+        .unwrap_err();
+    assert_eq!(
+        ContractError::ConfigNotUpdatable {},
+        err.downcast().unwrap()
+    );
 }
