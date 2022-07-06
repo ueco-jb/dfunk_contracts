@@ -47,11 +47,35 @@ To distribute USTC:
 ```
 ### UpdateConfig
 
-Config can be updated only by the admin. 
+Config can be updated only by the admin. The administration of the contract is transferable to another account, a multisig wallet, or a governance contract. Setting the `admin` field as empty will make the contract non-updatable.
 
 ```
-
+{
+    "update_config": {
+        "admin": "terra1na854dwyp46698ylzwsdqh7fs2tcvxl9rm4feg",
+        "burn_address": "terra1sk06e3dyexuq4shw77y3dsv480xv42mq73anxu",
+        "whitelist": [{
+                "address": "terra1zw4hdq5zme37a3cvv9ad80deg54zfggxzkh3fu",
+                "protocol": "terraswap"
+            },
+            {
+                "address": "terra1f63jhwhcy9zccwwv9hnl8954hdns94krrxvwvs",
+                "protocol": "anchor"
+            }
+        ],
+        "weight_per_protocol": [{
+                "protocol": "terraswap",
+                "weight": "0.5"
+            },
+            {
+                "protocol": "anchor",
+                "weight": "0.5"
+            }
+        ]
+    }
+}
 ```
+
 
 ## Query
 
