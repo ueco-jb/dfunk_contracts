@@ -1,22 +1,36 @@
-# Terra Deposit Starter Pack
+## About the contract
 
-This is a simple template to manage `UST` deposit into a Smart Contract
+This is a smart contract for distribution of funds from the community pool as per [Prop 4080 on Terra Classic](https://classic-agora.terra.money/t/proposal-distribute-50-transaction-fees-to-the-community-pool-increase-proposer-validator-rewards/44729)
 
-You can Interact with this Smart Contract using this **TESTNET** address:
+## Distribution logic
+
+Consider a total transaction fee (TF) of 100 LUNC. The distribution logic is as follows:
+
+- Amount going to the community pool (CP) = 50 LUNC (50% of TF)
+- Amount reserved for core dev (CD) = 5 LUNC (5% of TF or 10% of CP)
+- Amount to be distributed for burning + airdrop (DA) = 45 LUNC (45% of TF or 90% of CP)
+- Burn amount (BA) = 35 LUNC (35% of TF or `77.78%` of DA)
+- Airdrop amount (AA) = 10 LUNC (10% of TF or `22.22%` of DA)
+
+The contract will handle the distribution of the Burn Amount (BA) and Airdrop Amount (AA) in the ratio of `77.78:2.22`, as per the logic above.
+
+## Burn address
+
+The burn amount will be sent to the following address: 
+```
+terra1sk06e3dyexuq4shw77y3dsv480xv42mq73anxu
+```
+
+## Airdrop whitelist
+If you are a Terra Classic dapp with a [TVL greater than 0](https://defillama.com/chain/Terra%20Classic), you can create a pull request [here](whitelist/airdrop.json) to qualify for the airdrop.
+
+## Usage
+
+You can interact with this smart contract using this **CLASSIC MAINNET** address:
 ```
 terra1yqngjhzda6gclquuwhacedf4h2mts8ztd6xc2z
 ```
-Or using the integration testing:
 
-```
-git clone https://github.com/0x7183/common-cw-examples
-```
-```
-cd common-cw-examples/contracts/deposit
-```
-```
-python3 ../../test/test.py deposit deposit.wasm all
-```
 ## ExecuteMsg
 
 ### Deposit
