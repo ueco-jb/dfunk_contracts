@@ -12,7 +12,7 @@ Consider a total transaction fee (TF) of 100 LUNC. The distribution logic is as 
 - Burn amount (BA) = 35 LUNC (35% of TF or `77.78%` of DA)
 - Airdrop amount (AA) = 10 LUNC (10% of TF or `22.22%` of DA)
 
-The contract will handle the distribution of the Burn Amount (BA) and Airdrop Amount (AA) in the ratio of `77.78:2.22`, as per the logic above.
+The contract will only handle the distribution of the Burn Amount (BA) and Airdrop Amount (AA) in the ratio of `77.78:2.22`, as per the logic above.
 
 ## Burn address
 
