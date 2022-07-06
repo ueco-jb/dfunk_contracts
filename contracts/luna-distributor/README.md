@@ -34,14 +34,19 @@ The contract has been instantiated without the `--set-signer-as-admin` flag, mak
 
 ## ExecuteMsg
 
-### Deposit
+### Distribute
 ```
-{"deposit":{}}
+{"distribute":{"denom":"uluna"}}
 ```
-### Withdraw all
+```
+{"distribute":{"denom":"uusd"}}
+```
+### UpdateConfig
+
+Config can be updated only by the admin. 
 
 ```
-{"withdrawal":{"id":"deposit_id"}}
+
 ```
 
 ## Query
