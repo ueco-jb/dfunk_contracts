@@ -35,9 +35,13 @@ The contract has been instantiated without the `--set-signer-as-admin` flag, mak
 ## ExecuteMsg
 
 ### Distribute
+The following messages need to be sent to distribute the funds from the contract.
+
+To distribute LUNC:
 ```
 {"distribute":{"denom":"uluna"}}
 ```
+To distribute USTC:
 ```
 {"distribute":{"denom":"uusd"}}
 ```
@@ -52,7 +56,7 @@ Config can be updated only by the admin.
 ## Query
 
 ### Get Config
-
+To get the current configuration of the contract:
 ```
 {"config":{}}
 ```
