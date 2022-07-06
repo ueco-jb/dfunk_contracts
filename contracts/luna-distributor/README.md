@@ -28,25 +28,59 @@ If you are a Terra Classic dapp with a [TVL greater than 0](https://defillama.co
 
 You can interact with this smart contract using this **CLASSIC MAINNET** address:
 ```
-terra1yqngjhzda6gclquuwhacedf4h2mts8ztd6xc2z
+terra1cml0je7m86tzaptk3y7sfvnkhwuuxt2xwpnax8
 ```
+The contract has been instantiated without the `--set-signer-as-admin` flag, making it immutable (the contract cannot be migrated).
 
 ## ExecuteMsg
 
-### Deposit
+### Distribute
+The following messages need to be sent to distribute the funds from the contract.
+
+To distribute LUNC:
 ```
-{"deposit":{}}
+{"distribute":{"denom":"uluna"}}
 ```
-### Withdraw all
+To distribute USTC:
+```
+{"distribute":{"denom":"uusd"}}
+```
+### UpdateConfig
+
+Config can be updated only by the admin set via `InstantiateMsg`. The administration of the contract is transferable to another account, a multisig wallet, or a governance contract. Setting the `admin` field as empty will make the contract non-updatable.
 
 ```
-{"withdrawal":{"id":"deposit_id"}}
+{
+    "update_config": {
+        "admin": "terra1na854dwyp46698ylzwsdqh7fs2tcvxl9rm4feg",
+        "burn_address": "terra1sk06e3dyexuq4shw77y3dsv480xv42mq73anxu",
+        "whitelist": [{
+                "address": "terra1zw4hdq5zme37a3cvv9ad80deg54zfggxzkh3fu",
+                "protocol": "terraswap"
+            },
+            {
+                "address": "terra1f63jhwhcy9zccwwv9hnl8954hdns94krrxvwvs",
+                "protocol": "anchor"
+            }
+        ],
+        "weight_per_protocol": [{
+                "protocol": "terraswap",
+                "weight": "0.5"
+            },
+            {
+                "protocol": "anchor",
+                "weight": "0.5"
+            }
+        ]
+    }
+}
 ```
+
 
 ## Query
 
-### Get Deposits
-
+### Get Config
+To get the current configuration of the contract:
 ```
-{"get_deposits":{"address":"depositor_address"}}
+{"config":{}}
 ```
