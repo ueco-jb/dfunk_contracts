@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, BankMsg, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, SubMsg, Uint128,
+    to_binary, BankMsg, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    SubMsg, Uint128,
 };
 use cw2::set_contract_version;
 
@@ -80,7 +80,42 @@ pub fn execute(
 mod execute {
     use super::*;
 
-    use cosmwasm_std::{BalanceResponse, BankQuery, QueryRequest};
+    use cosmwasm_std::{coin, BalanceResponse, BankQuery, Coin, QuerierWrapper, QueryRequest};
+    use terra_cosmwasm::TerraQuerier;
+
+    /// Decimal points
+    static DECIMAL_FRACTION: Uint128 = Uint128::new(1_000_000_000_000_000_000u128);
+
+    /// Calculates and returns a tax for a chain's native token. For other tokens it returns zero.
+    /// ## Params
+    /// * **self** is the type of the caller object.
+    ///
+    /// * **querier** is an object of type [`QuerierWrapper`]
+    pub fn compute_tax(base: &Coin, querier: &QuerierWrapper) -> StdResult<Uint128> {
+        let amount = base.amount;
+        let terra_querier = TerraQuerier::new(querier);
+        let tax_rate: Decimal = (terra_querier.query_tax_rate()?).rate;
+        let tax_cap: Uint128 = (terra_querier.query_tax_cap(base.denom.to_string())?).cap;
+        Ok(std::cmp::min(
+            (amount.checked_sub(amount.multiply_ratio(
+                DECIMAL_FRACTION,
+                DECIMAL_FRACTION * tax_rate + DECIMAL_FRACTION,
+            )))?,
+            tax_cap,
+        ))
+    }
+
+    /// Calculates and returns a deducted tax for transferring the native token from the chain. For other tokens it returns an [`Err`].
+    /// ## Params
+    /// * **self** is the type of the caller object.
+    ///
+    /// * **querier** is an object of type [`QuerierWrapper`]
+    pub fn deduct_tax(amount: &Coin, querier: &QuerierWrapper) -> StdResult<Coin> {
+        Ok(Coin {
+            denom: amount.denom.to_string(),
+            amount: amount.amount.checked_sub(compute_tax(amount, querier)?)?,
+        })
+    }
 
     pub fn distribute(deps: DepsMut, env: Env, denom: String) -> Result<Response, ContractError> {
         let contract_address = env.contract.address;
@@ -89,6 +124,9 @@ mod execute {
                 address: contract_address.to_string(),
                 denom: denom.clone(),
             }))?;
+
+        let _tax = deduct_tax(&balance.amount, &deps.querier)?;
+
         let balance = balance.amount.amount;
 
         if balance == Uint128::zero() {
@@ -101,7 +139,10 @@ mod execute {
 
         let mut response = Response::new().add_submessage(SubMsg::new(BankMsg::Send {
             to_address: config.burn_address.to_string(),
-            amount: vec![coin(amount_to_burn.u128(), denom.clone())],
+            amount: vec![deduct_tax(
+                &coin(amount_to_burn.u128(), denom.clone()),
+                &deps.querier,
+            )?],
         }));
 
         // Iter through whitelist
@@ -116,7 +157,10 @@ mod execute {
                 let amount = amount_to_distribute * wpp.weight;
                 let msg = SubMsg::new(BankMsg::Send {
                     to_address: wl_item.address.to_string(),
-                    amount: vec![coin(amount.u128(), denom.clone())],
+                    amount: vec![deduct_tax(
+                        &coin(amount.u128(), denom.clone()),
+                        &deps.querier,
+                    )?],
                 });
                 response = response.add_submessage(msg);
             } else {

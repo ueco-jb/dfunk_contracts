@@ -403,6 +403,7 @@ dependencies = [
  "cw2",
  "schemars",
  "serde",
+ "terra-cosmwasm",
  "terra-multi-test",
  "thiserror",
 ]
