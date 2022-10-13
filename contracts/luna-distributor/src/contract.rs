@@ -124,9 +124,6 @@ mod execute {
                 address: contract_address.to_string(),
                 denom: denom.clone(),
             }))?;
-
-        let _tax = deduct_tax(&balance.amount, &deps.querier)?;
-
         let balance = balance.amount.amount;
 
         if balance == Uint128::zero() {
