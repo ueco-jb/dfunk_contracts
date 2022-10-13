@@ -106,6 +106,7 @@ fn update() {
             owner.as_str(),
             None,
             None,
+            None,
             new_whitelist,
             new_weight_per_protocol,
         )
@@ -168,7 +169,7 @@ fn update_unauthorized() {
         .build();
 
     let err = suite
-        .update_config("someone_else", None, None, None, None)
+        .update_config("someone_else", None, None, None, None, None)
         .unwrap_err();
     assert_eq!(ContractError::Unauthorized {}, err.downcast().unwrap());
 }
@@ -187,7 +188,7 @@ fn update_with_empty_admin() {
 
     let owner = suite.owner();
     let err = suite
-        .update_config(owner.as_str(), None, None, None, None)
+        .update_config(owner.as_str(), None, None, None, None, None)
         .unwrap_err();
     assert_eq!(
         ContractError::ConfigNotUpdatable {},
@@ -209,7 +210,7 @@ fn update_to_empty_admin() {
     let owner = suite.owner();
     // first update to empty admin ""
     suite
-        .update_config(owner.as_str(), Some("".to_owned()), None, None, None)
+        .update_config(owner.as_str(), Some("".to_owned()), None, None, None, None)
         .unwrap();
 
     assert!(matches!(suite.query_config().unwrap(),
@@ -218,7 +219,7 @@ fn update_to_empty_admin() {
             } if admin.is_empty()));
 
     let err = suite
-        .update_config(owner.as_str(), None, None, None, None)
+        .update_config(owner.as_str(), None, None, None, None, None)
         .unwrap_err();
     assert_eq!(
         ContractError::ConfigNotUpdatable {},

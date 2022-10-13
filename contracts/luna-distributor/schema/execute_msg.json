@@ -43,6 +43,12 @@
                 "null"
               ]
             },
+            "developer_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "weight_per_protocol": {
               "type": [
                 "array",

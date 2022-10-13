@@ -67,6 +67,7 @@ pub fn execute(
         ExecuteMsg::UpdateConfig {
             admin,
             burn_address,
+            developer_address,
             whitelist,
             weight_per_protocol,
         } => execute::update_config(
@@ -74,6 +75,7 @@ pub fn execute(
             info,
             admin,
             burn_address,
+            developer_address,
             whitelist,
             weight_per_protocol,
         ),
@@ -186,6 +188,7 @@ mod execute {
         info: MessageInfo,
         admin: Option<String>,
         burn_address: Option<String>,
+        developer_address: Option<String>,
         whitelist: Option<Vec<Whitelist>>,
         weight_per_protocol: Option<Vec<WeightPerProtocol>>,
     ) -> Result<Response, ContractError> {
@@ -204,6 +207,10 @@ mod execute {
 
         if let Some(burn_address) = burn_address {
             config.burn_address = deps.api.addr_validate(&burn_address)?;
+        }
+
+        if let Some(developer_address) = developer_address {
+            config.developer_address = deps.api.addr_validate(&developer_address)?;
         }
 
         if let Some(whitelist) = whitelist {

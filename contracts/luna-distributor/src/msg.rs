@@ -23,6 +23,7 @@ pub enum ExecuteMsg {
     UpdateConfig {
         admin: Option<String>,
         burn_address: Option<String>,
+        developer_address: Option<String>,
         whitelist: Option<Vec<Whitelist>>,
         weight_per_protocol: Option<Vec<WeightPerProtocol>>,
     },

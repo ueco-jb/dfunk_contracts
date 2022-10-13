@@ -174,6 +174,7 @@ impl Suite {
         sender: &str,
         admin: impl Into<Option<String>>,
         burn_address: impl Into<Option<String>>,
+        developer_address: impl Into<Option<String>>,
         whitelist: impl Into<Option<Vec<Whitelist>>>,
         weight_per_protocol: impl Into<Option<Vec<WeightPerProtocol>>>,
     ) -> AnyResult<AppResponse> {
@@ -183,6 +184,7 @@ impl Suite {
             &ExecuteMsg::UpdateConfig {
                 admin: admin.into(),
                 burn_address: burn_address.into(),
+                developer_address: developer_address.into(),
                 whitelist: whitelist.into(),
                 weight_per_protocol: weight_per_protocol.into(),
             },
