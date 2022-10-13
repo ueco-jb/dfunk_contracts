@@ -9,6 +9,7 @@ pub struct MigrateMsg {}
 pub struct InstantiateMsg {
     pub admin: String,
     pub burn_address: String,
+    pub developer_address: String,
     pub whitelist: Vec<Whitelist>,
     pub weight_per_protocol: Vec<WeightPerProtocol>,
 }

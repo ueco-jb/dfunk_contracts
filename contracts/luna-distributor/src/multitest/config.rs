@@ -50,10 +50,12 @@ fn query() {
         Config {
             admin: suite.owner().to_string(),
             burn_address: Addr::unchecked(suite.burn_address()),
+            developer_address: Addr::unchecked(suite.developer_address()),
             whitelist,
             weight_per_protocol,
-            percent_to_burn: Decimal::from_ratio(7778u128, 10000u128),
-            percent_to_distribute: Decimal::from_ratio(2222u128, 10000u128),
+            percent_to_burn: Decimal::percent(70),
+            percent_to_developer: Decimal::percent(10),
+            percent_to_distribute: Decimal::percent(20),
         }
     );
 }
@@ -144,10 +146,12 @@ fn update() {
         Config {
             admin: suite.owner().to_string(),
             burn_address: Addr::unchecked(suite.burn_address()),
+            developer_address: Addr::unchecked(suite.developer_address()),
             whitelist,
             weight_per_protocol,
-            percent_to_burn: Decimal::from_ratio(7778u128, 10000u128),
-            percent_to_distribute: Decimal::from_ratio(2222u128, 10000u128),
+            percent_to_burn: Decimal::percent(70),
+            percent_to_developer: Decimal::percent(10),
+            percent_to_distribute: Decimal::percent(20),
         }
     );
 }

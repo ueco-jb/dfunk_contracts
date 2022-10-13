@@ -25,6 +25,7 @@ where
 pub struct SuiteBuilder {
     pub admin: String,
     pub burn_address: String,
+    pub developer_address: String,
     pub whitelist: Vec<Whitelist>,
     pub weight_per_protocol: Vec<WeightPerProtocol>,
     pub funds: Vec<(Addr, Vec<Coin>)>,
@@ -35,6 +36,7 @@ impl SuiteBuilder {
         Self {
             admin: "owner".to_owned(),
             burn_address: "burnaddress".to_owned(),
+            developer_address: "devaddress".to_owned(),
             whitelist: vec![],
             weight_per_protocol: vec![],
             funds: vec![],
@@ -86,6 +88,7 @@ impl SuiteBuilder {
 
         let admin = self.admin;
         let burn_address = self.burn_address;
+        let developer_address = self.developer_address;
 
         let distributor_id = app.store_code(contract_distributor());
         let distributor_contract = app
@@ -95,6 +98,7 @@ impl SuiteBuilder {
                 &InstantiateMsg {
                     admin,
                     burn_address: burn_address.clone(),
+                    developer_address: developer_address.clone(),
                     whitelist: self.whitelist,
                     weight_per_protocol: self.weight_per_protocol,
                 },
@@ -114,6 +118,7 @@ impl SuiteBuilder {
             owner,
             contract: distributor_contract,
             burn_address,
+            developer_address,
         }
     }
 }
@@ -127,6 +132,8 @@ pub struct Suite {
     contract: Addr,
     /// Address of burn contract
     burn_address: String,
+    /// Address of developer contract
+    developer_address: String,
 }
 
 impl Suite {
@@ -140,6 +147,10 @@ impl Suite {
 
     pub fn burn_address(&mut self) -> String {
         self.burn_address.clone()
+    }
+
+    pub fn developer_address(&mut self) -> String {
+        self.developer_address.clone()
     }
 
     pub fn deposit(&mut self, sender: &str, funds: &[Coin]) -> AnyResult<AppResponse> {

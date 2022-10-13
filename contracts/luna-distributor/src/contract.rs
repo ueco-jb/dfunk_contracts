@@ -38,13 +38,16 @@ pub fn instantiate(
     }
 
     let burn_address = deps.api.addr_validate(&msg.burn_address)?;
+    let developer_address = deps.api.addr_validate(&msg.developer_address)?;
     let config = Config {
         admin: msg.admin,
         burn_address,
+        developer_address,
         whitelist,
         weight_per_protocol,
-        percent_to_burn: Decimal::from_ratio(7778u128, 10000u128), // 77.78%
-        percent_to_distribute: Decimal::from_ratio(2222u128, 10000u128), // 22.22%
+        percent_to_burn: Decimal::percent(70),
+        percent_to_developer: Decimal::percent(10),
+        percent_to_distribute: Decimal::percent(20),
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONFIG.save(deps.storage, &config)?;
@@ -133,14 +136,24 @@ mod execute {
         let config = CONFIG.load(deps.storage)?;
         let amount_to_distribute = balance * config.percent_to_distribute;
         let amount_to_burn = balance * config.percent_to_burn;
+        let amount_to_developer = balance * config.percent_to_developer;
 
-        let mut response = Response::new().add_submessage(SubMsg::new(BankMsg::Send {
-            to_address: config.burn_address.to_string(),
-            amount: vec![deduct_tax(
-                &coin(amount_to_burn.u128(), denom.clone()),
-                &deps.querier,
-            )?],
-        }));
+        let mut response = Response::new().add_submessages(vec![
+            SubMsg::new(BankMsg::Send {
+                to_address: config.burn_address.to_string(),
+                amount: vec![deduct_tax(
+                    &coin(amount_to_burn.u128(), denom.clone()),
+                    &deps.querier,
+                )?],
+            }),
+            SubMsg::new(BankMsg::Send {
+                to_address: config.developer_address.to_string(),
+                amount: vec![deduct_tax(
+                    &coin(amount_to_developer.u128(), denom.clone()),
+                    &deps.querier,
+                )?],
+            }),
+        ]);
 
         // Iter through whitelist
         for wl_item in config.whitelist.iter() {

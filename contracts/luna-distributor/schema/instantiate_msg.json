@@ -5,6 +5,7 @@
   "required": [
     "admin",
     "burn_address",
+    "developer_address",
     "weight_per_protocol",
     "whitelist"
   ],
@@ -13,6 +14,9 @@
       "type": "string"
     },
     "burn_address": {
+      "type": "string"
+    },
+    "developer_address": {
       "type": "string"
     },
     "weight_per_protocol": {

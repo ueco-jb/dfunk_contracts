@@ -8,9 +8,11 @@ use cw_storage_plus::Item;
 pub struct Config {
     pub admin: String,
     pub burn_address: Addr,
+    pub developer_address: Addr,
     pub whitelist: Vec<Whitelist>,
     pub weight_per_protocol: Vec<WeightPerProtocol>,
     pub percent_to_burn: Decimal,
+    pub percent_to_developer: Decimal,
     pub percent_to_distribute: Decimal,
 }
 
