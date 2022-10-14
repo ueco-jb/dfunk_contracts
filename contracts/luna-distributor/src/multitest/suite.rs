@@ -2,7 +2,7 @@ use anyhow::Result as AnyResult;
 use schemars::JsonSchema;
 use std::fmt;
 
-use cosmwasm_std::{Addr, Coin, Decimal};
+use cosmwasm_std::{Addr, BalanceResponse, BankQuery, Coin, Decimal, QueryRequest, Uint128};
 use terra_multi_test::{App, AppBuilder, AppResponse, Contract, ContractWrapper, Executor};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, WeightPerProtocol, Whitelist};
@@ -192,11 +192,39 @@ impl Suite {
         )
     }
 
+    pub fn burn_the_bottom(
+        &mut self,
+        sender: &str,
+        less_then: Uint128,
+        denom: &str,
+    ) -> AnyResult<AppResponse> {
+        self.app.execute_contract(
+            Addr::unchecked(sender),
+            self.contract.clone(),
+            &ExecuteMsg::BurnTheBottom {
+                less_then,
+                denom: denom.into(),
+            },
+            &[],
+        )
+    }
+
     pub fn query_config(&self) -> AnyResult<Config> {
         let response: Config = self
             .app
             .wrap()
             .query_wasm_smart(self.contract.clone(), &QueryMsg::Config {})?;
         Ok(response)
+    }
+
+    pub fn query_contract_balance(&self, denom: &str) -> AnyResult<u128> {
+        let balance: BalanceResponse =
+            self.app
+                .wrap()
+                .query(&QueryRequest::Bank(BankQuery::Balance {
+                    address: self.contract.to_string(),
+                    denom: denom.into(),
+                }))?;
+        Ok(balance.amount.amount.u128())
     }
 }
