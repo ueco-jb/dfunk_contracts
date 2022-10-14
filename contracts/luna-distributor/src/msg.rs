@@ -1,6 +1,7 @@
-use cosmwasm_std::Decimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use cosmwasm_std::{Decimal, Uint128};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MigrateMsg {}
@@ -26,6 +27,13 @@ pub enum ExecuteMsg {
         developer_address: Option<String>,
         whitelist: Option<Vec<Whitelist>>,
         weight_per_protocol: Option<Vec<WeightPerProtocol>>,
+    },
+    /// Burn any leftover tokens that stays on the contract
+    BurnTheBottom {
+        /// Threshold above which method won't do anything
+        less_then: Uint128,
+        /// Denom of leftover tokens to burn
+        denom: String,
     },
 }
 
