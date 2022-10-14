@@ -26,4 +26,7 @@ pub enum ContractError {
 
     #[error("Config cannot be updated - admin field is empty")]
     ConfigNotUpdatable {},
+
+    #[error("Balance is bigger {0} then specified threshold {1}")]
+    BurnTheBottom(u128, u128),
 }

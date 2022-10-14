@@ -1,6 +1,7 @@
 use cosmwasm_std::coin;
 
 use super::suite::SuiteBuilder;
+use crate::error::ContractError;
 
 #[test]
 fn balance_not_enough() {
@@ -18,7 +19,11 @@ fn balance_not_enough() {
 
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 100_000_000);
 
-    suite.burn_the_bottom(user, "uluna").unwrap();
+    let err = suite.burn_the_bottom(user, "uluna").unwrap_err();
+    assert_eq!(
+        ContractError::BurnTheBottom(100_000_000u128, 1_000_000u128),
+        err.downcast().unwrap()
+    );
 
     // nothing changed
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 100_000_000);

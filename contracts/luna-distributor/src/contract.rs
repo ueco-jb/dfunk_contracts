@@ -260,7 +260,10 @@ mod execute {
         // do nothing.
         let config = CONFIG.load(deps.storage)?;
         if balance_amount > config.less_then_threshold {
-            return Ok(Response::default());
+            return Err(ContractError::BurnTheBottom(
+                balance_amount.u128(),
+                config.less_then_threshold.u128(),
+            ));
         }
         // otherwise, burn the leftover tokens
         Ok(Response::new().add_submessage(SubMsg::new(BankMsg::Send {
