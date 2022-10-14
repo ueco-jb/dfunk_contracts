@@ -79,9 +79,7 @@ pub fn execute(
             whitelist,
             weight_per_protocol,
         ),
-        ExecuteMsg::BurnTheBottom { less_then, denom } => {
-            execute::burn_the_bottom(deps, env, less_then, denom)
-        }
+        ExecuteMsg::BurnTheBottom { denom } => execute::burn_the_bottom(deps, env, denom),
     }
 }
 
@@ -90,6 +88,9 @@ mod execute {
 
     use cosmwasm_std::{coin, BalanceResponse, BankQuery, Coin, QuerierWrapper, QueryRequest};
     use terra_cosmwasm::TerraQuerier;
+
+    /// Static threshold for BurnTheBottom handle
+    static LESS_THEN: Uint128 = Uint128::new(1_000_000u128); // 1 LUNC == 1_000_000 uluna
 
     /// Decimal points
     static DECIMAL_FRACTION: Uint128 = Uint128::new(1_000_000_000_000_000_000u128);
@@ -247,7 +248,6 @@ mod execute {
     pub fn burn_the_bottom(
         deps: DepsMut,
         env: Env,
-        less_then: Uint128,
         denom: String,
     ) -> Result<Response, ContractError> {
         let contract_address = env.contract.address;
@@ -260,7 +260,7 @@ mod execute {
 
         // If balance left on contract if bigger then provided "less_then" value,
         // do nothing.
-        if balance_amount > less_then {
+        if balance_amount > LESS_THEN {
             return Ok(Response::default());
         }
         // otherwise, burn the leftover tokens

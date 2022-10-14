@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, Uint128};
+use cosmwasm_std::coin;
 
 use super::suite::SuiteBuilder;
 
@@ -18,9 +18,7 @@ fn balance_not_enough() {
 
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 100_000_000);
 
-    suite
-        .burn_the_bottom(user, Uint128::new(1_000), "uluna")
-        .unwrap();
+    suite.burn_the_bottom(user, "uluna").unwrap();
 
     // nothing changed
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 100_000_000);
@@ -42,9 +40,7 @@ fn balance_less_then() {
 
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 700);
 
-    suite
-        .burn_the_bottom(user, Uint128::new(1_000), "uluna")
-        .unwrap();
+    suite.burn_the_bottom(user, "uluna").unwrap();
 
     // nothing changed
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 0);
@@ -62,13 +58,11 @@ fn balance_equal() {
         .with_funds(user, &[coin(100_000_000, "uluna")])
         .build();
 
-    suite.deposit(user, &[coin(1_000, "uluna")]).unwrap();
+    suite.deposit(user, &[coin(1_000_000, "uluna")]).unwrap();
 
-    assert_eq!(suite.query_contract_balance("uluna").unwrap(), 1_000);
+    assert_eq!(suite.query_contract_balance("uluna").unwrap(), 1_000_000);
 
-    suite
-        .burn_the_bottom(user, Uint128::new(1_000), "uluna")
-        .unwrap();
+    suite.burn_the_bottom(user, "uluna").unwrap();
 
     // nothing changed
     assert_eq!(suite.query_contract_balance("uluna").unwrap(), 0);
