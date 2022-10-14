@@ -79,6 +79,9 @@ pub fn execute(
             whitelist,
             weight_per_protocol,
         ),
+        ExecuteMsg::BurnTheBottom { less_then, denom } => {
+            execute::burn_the_bottom(deps, env, less_then, denom)
+        }
     }
 }
 
@@ -239,6 +242,31 @@ mod execute {
         CONFIG.save(deps.storage, &config)?;
 
         Ok(Response::new())
+    }
+
+    pub fn burn_the_bottom(
+        deps: DepsMut,
+        env: Env,
+        less_then: Uint128,
+        denom: String,
+    ) -> Result<Response, ContractError> {
+        let contract_address = env.contract.address;
+        let balance: BalanceResponse =
+            deps.querier.query(&QueryRequest::Bank(BankQuery::Balance {
+                address: contract_address.to_string(),
+                denom,
+            }))?;
+        let balance_amount = balance.amount.amount;
+
+        // If balance left on contract if bigger then provided "less_then" value,
+        // do nothing.
+        if balance_amount > less_then {
+            return Ok(Response::default());
+        }
+        // otherwise, burn the leftover tokens
+        Ok(Response::new().add_submessage(SubMsg::new(BankMsg::Burn {
+            amount: vec![balance.amount],
+        })))
     }
 }
 
