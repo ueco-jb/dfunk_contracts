@@ -48,6 +48,7 @@ pub fn instantiate(
         percent_to_burn: Decimal::percent(70),
         percent_to_developer: Decimal::percent(10),
         percent_to_distribute: Decimal::percent(20),
+        less_then_threshold: Uint128::new(1_000_000u128), // 1 LUNC == 1_000_000 uluna
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     CONFIG.save(deps.storage, &config)?;
@@ -88,9 +89,6 @@ mod execute {
 
     use cosmwasm_std::{coin, BalanceResponse, BankQuery, Coin, QuerierWrapper, QueryRequest};
     use terra_cosmwasm::TerraQuerier;
-
-    /// Static threshold for BurnTheBottom handle
-    static LESS_THEN: Uint128 = Uint128::new(1_000_000u128); // 1 LUNC == 1_000_000 uluna
 
     /// Decimal points
     static DECIMAL_FRACTION: Uint128 = Uint128::new(1_000_000_000_000_000_000u128);
@@ -260,12 +258,14 @@ mod execute {
 
         // If balance left on contract if bigger then provided "less_then" value,
         // do nothing.
-        if balance_amount > LESS_THEN {
+        let config = CONFIG.load(deps.storage)?;
+        if balance_amount > config.less_then_threshold {
             return Ok(Response::default());
         }
         // otherwise, burn the leftover tokens
-        Ok(Response::new().add_submessage(SubMsg::new(BankMsg::Burn {
-            amount: vec![balance.amount],
+        Ok(Response::new().add_submessage(SubMsg::new(BankMsg::Send {
+            to_address: config.burn_address.to_string(),
+            amount: vec![deduct_tax(&balance.amount, &deps.querier)?],
         })))
     }
 }

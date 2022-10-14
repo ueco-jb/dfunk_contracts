@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Decimal};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_storage_plus::Item;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -14,6 +14,8 @@ pub struct Config {
     pub percent_to_burn: Decimal,
     pub percent_to_developer: Decimal,
     pub percent_to_distribute: Decimal,
+    /// Threshold for BurnTheBottom handle
+    pub less_then_threshold: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

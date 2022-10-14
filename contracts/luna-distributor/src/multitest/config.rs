@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Decimal};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 
 use super::suite::SuiteBuilder;
 use crate::error::ContractError;
@@ -56,6 +56,7 @@ fn query() {
             percent_to_burn: Decimal::percent(70),
             percent_to_developer: Decimal::percent(10),
             percent_to_distribute: Decimal::percent(20),
+            less_then_threshold: Uint128::new(1_000_000u128),
         }
     );
 }
@@ -153,6 +154,7 @@ fn update() {
             percent_to_burn: Decimal::percent(70),
             percent_to_developer: Decimal::percent(10),
             percent_to_distribute: Decimal::percent(20),
+            less_then_threshold: Uint128::new(1_000_000u128),
         }
     );
 }
